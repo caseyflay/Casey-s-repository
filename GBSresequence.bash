@@ -1,4 +1,4 @@
-https://github.com/PlantandFoodResearch/bioinf_GBS_Actinidia/blame/cb2dc6a1346a1138e09a5ea5f5c75b1b270269f4/2016_Jibran_GBS/06_demultiplex_P1L5.sh
+#https://github.com/PlantandFoodResearch/bioinf_GBS_Actinidia/blame/cb2dc6a1346a1138e09a5ea5f5c75b1b270269f4/2016_Jibran_GBS/06_demultiplex_P1L5.sh
 baseInputDir=/input/genomic/plant/Actinidia/chinensis/GBS/2016_CAGRF12857
 baseDir=/workspace/hrtcdf/GBSremap
 #P1, L5

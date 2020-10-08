@@ -1,0 +1,70 @@
+---
+title: "VCFfiltering"
+author: "Casey Flay"
+date: "31/08/2020"
+output: html_document
+---
+
+## check for failed samples and discard those that have less than 10% of sample assigned.
+## Filter by snp site discard snp sites with large amount of missing data.
+## do imputation?
+## joinmap only needs 2000 snps. talk to marike 3-5000 required.
+## if doing WGAS filter snps by LD.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>")
+library(RLinuxModules)
+module("load bcftools/1.9 openlava/3.2.12 samtools/1.9 matplotlib vcftools0.1.14 tassel/5.2.28")
+```
+bcftools view options
+http://samtools.github.io/bcftools/bcftools.html#expressions
+
+
+
+## run for unzipped file once working and run through Tassel 5 for hapmap format.
+## -e 'F_MISSING>0.0' takes out all individuals with a missing genotype. this needs to be in bcftools filter as bcftools view wont take -i and -e.
+```{bash}
+cd "/powerplant/workspace/hrtcdf/GBSremap/15_FilterVCF"
+t=8
+x=filtMAF.05D16Q20G9FM0.0
+set=bwa ## change from [bwa_subset] to [bwa] to run full set not including square brackets.
+input="/powerplant/workspace/hrtcdf/GBSremap/10_alignbwa/${set}_calls.vcf.gz"
+logDir="/powerplant/workspace/hrtcdf/GBSremap/15_FilterVCF/logDir"
+
+bsub -n $t -o $logDir/${set}_${x}.log -e $logDir/${set}_${x}.err "bcftools view -i 'INFO/MAF[0]>0.05 && AVG(INFO/DP)>16 && QUAL>=20' $input | bcftools filter -e 'F_MISSING>0.0' -g9 -G9 -o ${set}_${x}.vcf && bcftools stats ${set}_${x}.vcf > ${set}_${x}.vcf.stats && run_pipeline.pl -fork1 -vcf ${set}_${x}.vcf -export ${set}_${x} -exportType Hapmap -runfork1"
+```
+
+
+```{bash}
+cd "/powerplant/workspace/hrtcdf/GBSremap/15_FilterVCF"
+
+for vcf in *.vcf.gz; do
+if  [ ! -f "${vcf}.stats" ]; then bcftools stats $vcf > ${vcf}.stats ; fi
+done
+```
+
+```{bash}
+plot-vcfstats bwa_DP8.vcf.gz.stats -p plots/
+```
+
+```{bash}
+pwd
+zcat bwa_bcft5.vcf.gz | grep -v "##" | cut -f1,2,3,4,5,6,7,8,9,10 | less
+## cat bwa_hetQ60Nm20gG10_filter.vcf | grep -v "##" | cut -f1,2,3,4,5,6,7,8,9,10 | less
+## zcat bwa_subset_filtered.vcf | grep '>' | more
+```
+
+## some info about the BamHI cut sites
+##70289 sites for BamHI to cut at.
+```{bash}
+wc -l /workspace/hramwd/github/NGSUserGroup/Workflows/GBS_enzymes/04.bedFiles/REFiles_PS1_1.69.0/BamHI.bed
+```
+
+```{bash}
+head /workspace/hramwd/github/NGSUserGroup/Workflows/GBS_enzymes/04.bedFiles/REFiles_PS1_1.69.0_LG/BamHI.bed
+```
+##cut site
+```{bash}
+samtools faidx  /output/genomic/plant/Actinidia/chinensis/CK51F3_01/Genome/Assembly/PS1/1.69.0/Chromosomes/WithoutNullChromosome/Fasta/Red5_PS1.1.69.0.fsa LG1:6726-6731
+```
+
